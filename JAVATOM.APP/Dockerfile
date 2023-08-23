@@ -1,23 +1,28 @@
-# Use an official Tomcat image as the base image
-FROM tomcat:9.0
+# Use an official Ubuntu image as the base image
+FROM ubuntu:latest
 
 # Set labels for the application and author
 LABEL JAVA_TOMCAT="app"
 LABEL author="Prudhvisurya"
 
-# Install OpenJDK 11 and Git
-RUN apt-get update && apt-get install -y openjdk-11-jdk git && apt-get clean
+# Install OpenJDK 11, Git, and Tomcat
+RUN apt-get update && \
+    apt-get install -y openjdk-11-jdk git && \
+    apt-get install -y tomcat9 && \
+    apt-get clean
 
-# Clone the repository
-RUN git clone -b java-Tomcat https://github.com/Prudhvisurya/Java-Tomcat.git /JAVATOM.APP
+
+# Clone the GitHub repository
+RUN git clone https://github.com/Prudhvisurya/Java-Tomcat.git 
 
 # Compile the Java code
-RUN cd /JAVATOM.APP/src/main/java && javac -classpath /usr/local/tomcat/lib/servlet-api.jar UserDetailsServlet.java
+RUN javac -classpath /usr/share/tomcat9/lib/servlet-api.jar /JAVATOM.APP/UserDetailsServlet.java
 
-# Copy files to respective locations
-RUN cp /JAVATOM.APP/src/main/java/UserDetailsServlet.class /usr/local/tomcat/webapps/my-web-app/WEB-INF/classes/
-RUN cp /JAVATOM.APP/src/main/webapp/WEB-INF/web.xml /usr/local/tomcat/webapps/my-web-app/WEB-INF/
-RUN cp /JAVATOM.APP/src/main/webapp/index.html /JAVATOM.APP/src/main/webapp/userdetails.jsp /usr/local/tomcat/webapps/my-web-app/
+# Copy compiled UserDetailsServlet.class to the Tomcat classes directory
+RUN cp /JAVATOM.APP/UserDetailsServlet.class /var/lib/tomcat9/webapps/my-web-app/WEB-INF/classes/ 
+# Copy web.xml, index.html, and userdetails.jsp to respective locations
+RUN cp /JAVATOM.APP/web.xml /var/lib/tomcat9/webapps/my-web-app/WEB-INF/
+RUN cp /JAVATOM.APP/index.html /JAVATOM.APP/userdetails.jsp /var/lib/tomcat9/webapps/my-web-app/
 
 # Expose the default Tomcat port
 EXPOSE 8080
